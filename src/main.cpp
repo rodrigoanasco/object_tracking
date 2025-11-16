@@ -13,11 +13,25 @@
 #include <vector>
 
 
+/*
+YOLOv8 expects images of a fixed size during inference (by default 640x640)
+So before sending the frame to the neural network, we do:
+cv::dnn::blobFromImage(frame, ..., cv::Size(INPUT_WIDTH, INPUT_HEIGHT), ...)
+which resizes the original frame (e.g., 1920×1080) to 640×640.
+
+Later, when we get box coordinates back (still in this 640×640 “network space”), we rescale them to the original frame size using x_factor and y_factor:
+float x_factor = frame.cols / (float)INPUT_WIDTH;
+float y_factor = frame.rows / (float)INPUT_HEIGHT;
+
+These two constants describe the input resolution for the model, and are used both for preprocessing (resize) and for mapping detection coordinates back to the original image.
+*/
 const int INPUT_WIDTH = 640;
 const int INPUT_HEIGHT = 640;
-const float CONFIDENCE_THRESHOLD = 0.4;
-const float SCORE_THRESHOLD = 0.4;
-const float NMS_THRESHOLD = 0.45;
+
+
+const float CONFIDENCE_THRESHOLD = 0.70;
+const float SCORE_THRESHOLD = 0.70;
+const float NMS_THRESHOLD = 0.75;
 
 
 
@@ -69,8 +83,8 @@ int main() {
         net.forward(output);
         //YOLO normally gives the shape of [1, 84, 8400]
         //We'll reshape to [8400, 84] : 8400 predictions, 84 values each
-        int rows = output.size[1]; // N = number of predictions
-        int cols = output.size[2]; // C = 4 + 1 + num_classes
+        int rows = output.size[2]; // N = number of predictions
+        int cols = output.size[1]; // C = 4 + 1 + num_classes
         cv::Mat output_reshaped(rows, cols, CV_32F, output.ptr<float>());
 
         int num_classes = cols - 5;
