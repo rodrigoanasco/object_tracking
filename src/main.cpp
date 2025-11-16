@@ -1,6 +1,8 @@
 #include <iostream>
 #include <opencv2/opencv.hpp>
 #include <opencv2/dnn.hpp>
+#include <opencv4/opencv2/highgui.hpp>
+#include <opencv4/opencv2/opencv.hpp>
 #include <opencv4/opencv2/videoio.hpp>
 
 
@@ -13,10 +15,30 @@ int main() {
     cv::VideoCapture video("../videos/walking_people.mp4");
     if (video.isOpened() == false){
         std::cout << "Cannot Open Video" << std::endl;
+        return -1;
     }
 
-    
-    std::cout << "Program Working Fine" << std::endl;
+    cv::Mat frame, gray;
+    while (true){
+        bool ret = video.read(frame);
 
+        if(!ret || frame.empty()){
+            //This can be triggered either when the video ends or if there is an error when reading
+            std::cout << "Don't have any frame or can't read the video. Exiting the loop" << std::endl;
+            break;
+        }
+
+        //convert to grayscale
+        cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
+
+        //display
+        cv::imshow("frame", gray);
+
+        if(cv::waitKey(25) == 'q'){
+            break;
+        }
+    }
+    std::cout << "Program Working Fine" << std::endl;
+    
     return 0;
 }
